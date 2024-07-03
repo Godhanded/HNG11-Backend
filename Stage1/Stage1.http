@@ -1,6 +1,0 @@
-@Stage1_HostAddress = http://localhost:5039
-
-GET {{Stage1_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

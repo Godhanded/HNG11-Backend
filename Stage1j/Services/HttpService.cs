@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Stage1.Models;
 
 
 namespace Stage1.Services
@@ -17,21 +18,24 @@ namespace Stage1.Services
         private readonly string _weatherBaseUrl = "https://api.weatherapi.com/v1/current.json?";
 
 
-        public async Task<(string?, string?)> GetIpDetails(string clientIp)
+        public async Task<(string?, double?)> GetIpDetails(string clientIp)
         {
             var locationData = await GetLocation(clientIp);
             if (locationData is null) return (null,null);
-            Console.WriteLine(locationData);
+           
 
             var city = locationData["city"]!;
+            var lon=locationData["lon"];
+            var lat=locationData["lat"];
 
-            var weatherData = await GetWeatherDetails(locationData["lon"], locationData["lat"]);
+            var weatherData = await GetWeatherDetails(lon.ToString(), lat.ToString());
             if (weatherData is null) return (null,null);
 
-            var temperature = weatherData!?.current?.temp_c;
-            return (city, temperature);
+            var temperature= weatherData?.current.temp_c;
+            
+            return (city.ToString(), temperature);
         }
-        private async Task<Dictionary<string, string>?> GetLocation(string clientIp)
+        private async Task<Dictionary<string, dynamic>?> GetLocation(string clientIp)
         {
             string url = _locationBaseUrl + $"/{clientIp}";
             var response = await _client.GetAsync(url);
@@ -41,8 +45,8 @@ namespace Stage1.Services
                 
                 var content = await response.Content.ReadAsStringAsync();
                 
-                var contentObject =JsonSerializer.Deserialize<Dictionary<string, string>>(content)!;
-                if (contentObject["status"]=="fail"){
+                var contentObject =JsonSerializer.Deserialize<Dictionary<string, dynamic>>(content)!;
+                if (contentObject["status"].ToString()=="fail"){
                     return null;
                 }
                 return contentObject;
@@ -50,18 +54,18 @@ namespace Stage1.Services
             return null;
         }
 
-        private async Task<dynamic?> GetWeatherDetails(string longitude, string latitude)
+        private async Task<WeatherResponse?> GetWeatherDetails(string longitude, string latitude)
         {
             StringBuilder builder = new StringBuilder(_weatherBaseUrl);
             string key = _config.GetSection("WeatherApiKey").Value!;
-            string[] queryParams = {$"q={latitude}", $"{longitude}", $"&key={key}"};
+            string[] queryParams = {$"q={latitude}", $",{longitude}", $"&key={key}"};
             builder.AppendJoin(null, queryParams);
 
             var response = await _client.GetAsync(builder.ToString());
             if (response.IsSuccessStatusCode)
             {
-                var content = response.Content.ReadAsStream();
-                return JsonSerializer.Deserialize<dynamic>(content);
+                var content = await response.Content.ReadFromJsonAsync<WeatherResponse>();
+                return content!;
 
             }
             return null;

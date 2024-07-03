@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Stage1.Models;
 using Stage1.Services;
@@ -10,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.Configure<ForwardedHeadersOptions>(op=>{
+    op.ForwardedHeaders= ForwardedHeaders.XForwardedFor |ForwardedHeaders.XForwardedProto;
+});
 builder.Services.AddScoped<HttpService>(x=>new HttpService(new HttpClient(),builder.Configuration));
 
 var app = builder.Build();
@@ -22,6 +26,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+    ForwardedHeaders.XForwardedProto
+});
 
 var summaries = new[]
 {
@@ -42,24 +52,28 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-app.MapGet("/api/hello",async (HttpService client,HttpContext context,[FromQuery]string visitor_name)=>
+app.MapGet("/api/hello",async (HttpService client,HttpContext context,[FromQuery]string? visitor_name)=>
 {
-    var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+    try{
+    var forwardedFor = context.GetServerVariable("HTTP_X_FORWARDED_FOR");
     var clientIp=forwardedFor?.Split(',').FirstOrDefault()?.Trim();
     if (string.IsNullOrEmpty(clientIp))
         clientIp = context.Connection.RemoteIpAddress?.ToString();
     if (clientIp is null)
         return Results.NotFound("Client Ip Not Found");
+
     // api check
     
-    (string? city,string? temperature)=await client.GetIpDetails(clientIp);
+    (string? city,double? temperature)=await client.GetIpDetails(clientIp);
     if ((city is null) || (temperature is null))
         return Results.NotFound("Ip Details Was Not Found");
     
 
-    var response = new ResponseDto(clientIp, city, $"Hello, {visitor_name??"Anonymous"} the temperature is{temperature} degrees Celcius in {city}");
-
+    var response = new ResponseDto(clientIp, city, $"Hello, {visitor_name??"Anonymous"}!, the temperature is {temperature} degrees Celcius in {city}");
     return Results.Ok(response);
+    }catch(Exception e){
+        return Results.Problem(e.ToString());
+    }
 }).WithName("GetIpInfo");
 
 app.Run();
