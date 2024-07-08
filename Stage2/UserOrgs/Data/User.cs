@@ -12,8 +12,9 @@ public class User
         public string password { get; set; }
         public string passwordSalt { get; set; }
         public string? phone { get; set; }
+        public ICollection<Organisation> organisations { get; set; } = [];
 
-        public ICollection<UserOrganisation> userOrganisations { get; set; }
+        //public ICollection<UserOrganisation> userOrganisations { get; set; }
 
         public UserDataDto ToUserDataDto()
         {

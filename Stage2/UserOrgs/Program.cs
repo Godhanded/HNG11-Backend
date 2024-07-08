@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using UserOrgs.Data;
 using UserOrgs.Dto;
 using UserOrgs.Services;
@@ -17,7 +17,7 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
     {
         var errors = actionContext.ModelState
                 .Where(e => e.Value.Errors.Count > 0)
-                .Select(e => new ModelError( e.Key, e.Value.Errors.First().ErrorMessage))
+                .Select(e => new ModelError(e.Key, e.Value.Errors.First().ErrorMessage))
                 .ToList();
 
         return new UnprocessableEntityObjectResult(new ModelErrorResponseDto(errors));
@@ -25,7 +25,24 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter into field your JWT token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
+
+    // Add security requirement for all APIs (optional)
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, new List<string>() }
+        });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -34,6 +51,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddTransient<TokenService>()
     .AddTransient<PasswordService>()
     .AddTransient<AuthService>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(jwtOptions =>
+    {
+        jwtOptions.TokenValidationParameters = TokenService.GetTokenValidationParameters(builder.Configuration);
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -50,6 +79,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

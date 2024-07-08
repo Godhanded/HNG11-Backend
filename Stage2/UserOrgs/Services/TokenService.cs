@@ -10,10 +10,18 @@ namespace UserOrgs.Services
     {
         private readonly IConfiguration _config = config;
 
+        public static TokenValidationParameters GetTokenValidationParameters(IConfiguration _config) => new TokenValidationParameters
+        {
+            ValidateAudience = false,
+            ValidateIssuer = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey=GetSecurityKey(_config),
+        };
+
         public string GenerateJwt(UserDataDto userData)
         {
-            var secretKey = _config["Jwt:SecretKey"];
-            var securityKey= new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!));
+            SymmetricSecurityKey securityKey = GetSecurityKey(_config);
 
             var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -31,6 +39,13 @@ namespace UserOrgs.Services
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(tokenObject);
+        }
+
+        private static SymmetricSecurityKey GetSecurityKey(IConfiguration _config)
+        {
+            var secretKey = _config["Jwt:SecretKey"];
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!));
+            return securityKey;
         }
     }
 }

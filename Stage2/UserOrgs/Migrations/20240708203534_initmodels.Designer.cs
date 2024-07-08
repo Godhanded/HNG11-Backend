@@ -11,8 +11,8 @@ using UserOrgs.Data;
 namespace UserOrgs.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240707232528_UserOrganisations")]
-    partial class UserOrganisations
+    [Migration("20240708203534_initmodels")]
+    partial class initmodels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,21 @@ namespace UserOrgs.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("OrganisationUser", b =>
+                {
+                    b.Property<string>("organisationsorgId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("usersuserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("organisationsorgId", "usersuserId");
+
+                    b.HasIndex("usersuserId");
+
+                    b.ToTable("OrganisationUser");
+                });
 
             modelBuilder.Entity("UserOrgs.Data.Organisation", b =>
                 {
@@ -77,48 +92,19 @@ namespace UserOrgs.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("UserOrgs.Data.UserOrganisation", b =>
+            modelBuilder.Entity("OrganisationUser", b =>
                 {
-                    b.Property<string>("userId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("organisationId")
-                        .HasColumnType("text");
-
-                    b.HasKey("userId", "organisationId");
-
-                    b.HasIndex("organisationId");
-
-                    b.ToTable("UserOrganisations");
-                });
-
-            modelBuilder.Entity("UserOrgs.Data.UserOrganisation", b =>
-                {
-                    b.HasOne("UserOrgs.Data.Organisation", "organisation")
-                        .WithMany("userOrganisations")
-                        .HasForeignKey("organisationId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                    b.HasOne("UserOrgs.Data.Organisation", null)
+                        .WithMany()
+                        .HasForeignKey("organisationsorgId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("UserOrgs.Data.User", "user")
-                        .WithMany("userOrganisations")
-                        .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                    b.HasOne("UserOrgs.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("usersuserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("organisation");
-
-                    b.Navigation("user");
-                });
-
-            modelBuilder.Entity("UserOrgs.Data.Organisation", b =>
-                {
-                    b.Navigation("userOrganisations");
-                });
-
-            modelBuilder.Entity("UserOrgs.Data.User", b =>
-                {
-                    b.Navigation("userOrganisations");
                 });
 #pragma warning restore 612, 618
         }

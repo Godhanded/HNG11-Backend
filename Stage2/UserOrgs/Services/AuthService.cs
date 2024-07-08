@@ -18,14 +18,29 @@ namespace UserOrgs.Services
             User user = userRegisterDto.ToModel();
             user.userId = Guid.NewGuid().ToString();
             (user.passwordSalt, user.password) = _passwordService.GenerateSaltAndHash(userRegisterDto.password);
+            var userOrganisation = new Organisation()
+            {
+                orgId = Guid.NewGuid().ToString(),
+                name = user.firstName + "'s Organisation",
+                description = ""
+            };
+            var userorg = new UserOrganisation()
+            {
+                user = user,
+                organisation = userOrganisation
+            };
+            user.organisations.Add(userOrganisation);
             await _dc.Users.AddAsync(user);
             await _dc.SaveChangesAsync();
+            
+            _dc.Update(user);
             return user;
         }
 
         public async Task<User?> LoginUser(UserLoginDto userLoginDto)
         {
-            var user= _dc.Users.FirstOrDefault(u=>u.email == userLoginDto.email);
+            var user= await _dc.Users
+                .FirstOrDefaultAsync(u=>u.email == userLoginDto.email);
             if (user is null)
                 return null;
 
