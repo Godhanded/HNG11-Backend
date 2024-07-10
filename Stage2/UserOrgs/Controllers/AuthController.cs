@@ -19,35 +19,35 @@ namespace UserOrgs.Controllers
         }
 
         [HttpPost("register")]
-        [ProducesResponseType(typeof(ResponseDto.SuccessResponse), (int)HttpStatusCode.Created)]
+        [ProducesResponseType(typeof(SuccessResponse), (int)HttpStatusCode.Created)]
         public async Task<ActionResult> RegisterUser([FromBody] UserRegisterDto userRegisterDto)
         {
             var registeredUser = await _authService.RegisterUser(userRegisterDto);
             if (registeredUser is null)
-                return BadRequest(new ResponseDto
-                    .FailiureResponse(
+                return BadRequest(new 
+                    FailiureResponse(
                     "Registration unsuccessful",
                     (int)HttpStatusCode.BadRequest)
                     );
 
             UserDataDto user = registeredUser.ToUserDataDto();
             string accessToken = _tokenService.GenerateJwt(user);
-            var response = new ResponseDto.SuccessResponse("Registration successful", new { accessToken, user });
+            var response = new SuccessResponse("Registration successful", new { accessToken, user });
             return CreatedAtAction("RegisterUser", response);
         }
 
         [HttpPost("login")]
-        [ProducesResponseType(typeof(ResponseDto.SuccessResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(SuccessResponse), (int)HttpStatusCode.OK)]
         public async Task<ActionResult> LoginUser([FromBody] UserLoginDto userLoginDto)
         {
             var loggedInUser = await _authService.LoginUser(userLoginDto);
             if (loggedInUser is null)
-                return Unauthorized(new ResponseDto.FailiureResponse("Authentication failed", (int)HttpStatusCode.Unauthorized));
+                return Unauthorized(new FailiureResponse("Authentication failed", (int)HttpStatusCode.Unauthorized));
             UserDataDto user = loggedInUser.ToUserDataDto();
 
             string accessToken = _tokenService.GenerateJwt(user);
 
-            var response = new ResponseDto.SuccessResponse("Login successful", new { accessToken, user });
+            var response = new SuccessResponse("Login successful", new { accessToken, user });
             return Ok(response);
         }
     }

@@ -23,5 +23,8 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.2" />
   </ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="Auth.Spec"/>
+	</ItemGroup>
 
 </Project>

@@ -22,9 +22,9 @@ namespace UserOrgs.Controllers
         public async Task<ActionResult> GetUserDetails(string userId)
         {
             var user = await _dc.Users.FindAsync(userId);
-            if (user is null) return NotFound(new ResponseDto.FailiureResponse("Not Found", (int)HttpStatusCode.NotFound, "Not Found"));
+            if (user is null) return NotFound(new FailiureResponse("Not Found", (int)HttpStatusCode.NotFound, "Not Found"));
 
-            return Ok(new ResponseDto.SuccessResponse("success", user.ToUserDataDto()));
+            return Ok(new SuccessResponse("success", user.ToUserDataDto()));
         }
     }
 }
