@@ -10,6 +10,8 @@ namespace Auth.Spec
     public class UserOrgTest
     {
         private HttpClient _httpClient;
+        private string _email= "foo@gmail.com";
+        private string _password="foobar";
 
         public UserOrgTest()
         {
@@ -25,16 +27,31 @@ namespace Auth.Spec
             {
                 firstName = "foo",
                 lastName = "bar",
-                email = $"foo@gmail.com",
-                password = "foobar"
+                email = _email,
+                password = _password
             };
             var response = await _httpClient.PostAsJsonAsync("auth/register",details);
 
-            var content = await response.Content.ReadFromJsonAsync<SuccessResponse>();
+            var content = await response.Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
 
             Assert.IsTrue(response.IsSuccessStatusCode);
             Assert.AreEqual(response.StatusCode,HttpStatusCode.Created);
+            Assert.IsNotNull(content.data.accessToken);
+            Assert.AreEqual(content.data.user.email, _email);
 
+        }
+
+        public async Task LoginRoute_LogsInUserSuccessfully()
+        {
+            UserLoginDto request = new(_email, _password);
+
+            var response= await _httpClient.PostAsJsonAsync("auth/login",request);
+
+            var content = await response.Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+            Assert.IsInstanceOfType(content?.data?.user,typeof(UserDataDto));
+            Assert.IsNotNull(content.data.accessToken);
         }
     }
 

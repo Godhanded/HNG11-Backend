@@ -27,7 +27,7 @@ namespace UserOrgs.Controllers
             var user = await _dc.Users.Include(u => u.organisations).FirstOrDefaultAsync(u => u.userId == userId);
             if (user is null) return NotFound(new FailiureResponse("Not Found", (int)HttpStatusCode.NotFound, "Not Found"));
             var organisations = user.organisations.Select(o => new OrganisationDto(o.orgId, o.name, o.description!)).ToList();
-            return Ok(new SuccessResponse("success", new { organisations }));
+            return Ok(new SuccessResponse<dynamic>("success", new { organisations }));
 
 
         }
@@ -40,7 +40,7 @@ namespace UserOrgs.Controllers
             if (org is null)
                 return NotFound(new FailiureResponse("Organisation Not Found", (int)HttpStatusCode.NotFound));
 
-            return Ok(new SuccessResponse("success", org.ToOrgDataDto()));
+            return Ok(new SuccessResponse<OrganisationDto>("success", org.ToOrgDataDto()));
         }
 
         [HttpPost]
@@ -61,7 +61,7 @@ namespace UserOrgs.Controllers
 
             await _dc.SaveChangesAsync();
 
-            return CreatedAtAction("CreateOrganisation", new SuccessResponse("success", newOrg.ToOrgDataDto()));
+            return CreatedAtAction("CreateOrganisation", new SuccessResponse<OrganisationDto>("success", newOrg.ToOrgDataDto()));
         }
 
         [HttpPost("{orgId}/users")]
@@ -79,7 +79,7 @@ namespace UserOrgs.Controllers
                 await _dc.SaveChangesAsync();
             }
 
-            return Ok(new SuccessResponse("User added to organisation successfully", null!));
+            return Ok(new SuccessResponse<dynamic>("User added to organisation successfully", null!));
         }
 
     }

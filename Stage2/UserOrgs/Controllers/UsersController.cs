@@ -24,7 +24,7 @@ namespace UserOrgs.Controllers
             var user = await _dc.Users.FindAsync(userId);
             if (user is null) return NotFound(new FailiureResponse("Not Found", (int)HttpStatusCode.NotFound, "Not Found"));
 
-            return Ok(new SuccessResponse("success", user.ToUserDataDto()));
+            return Ok(new SuccessResponse<UserDataDto>("success", user.ToUserDataDto()));
         }
     }
 }
