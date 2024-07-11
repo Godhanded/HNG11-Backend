@@ -32,7 +32,8 @@ namespace Auth.Spec
             };
             var response = await _httpClient.PostAsJsonAsync("auth/register", details);
 
-            var content = await response.Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
+            var content = await response
+                .Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
 
             Assert.IsTrue(response.IsSuccessStatusCode);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.Created);
@@ -56,7 +57,8 @@ namespace Auth.Spec
 
             var response = await _httpClient.PostAsJsonAsync("auth/login", request);
 
-            var content = await response.Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
+            var content = await response
+                .Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
 
             Assert.IsTrue(response.IsSuccessStatusCode);
             Assert.IsInstanceOfType(content?.data?.user, typeof(UserDataDto));
@@ -75,13 +77,16 @@ namespace Auth.Spec
                 password = _password
             };
             var response = await _httpClient.PostAsJsonAsync("auth/register", details);
-            var Authcontent = await response.Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
+            var Authcontent = await response
+                .Content.ReadFromJsonAsync<SuccessResponse<AuthResponsedto>>();
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Authcontent!.data!.accessToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new
+                AuthenticationHeaderValue("Bearer", Authcontent!.data!.accessToken);
 
             // Act
             var organisationresponse = await _httpClient.GetAsync("api/organisations");
-            var orgContent = await organisationresponse.Content.ReadFromJsonAsync<SuccessResponse<Dictionary<string, IEnumerable<OrganisationDto>>>>();
+            var orgContent = await organisationresponse
+                .Content.ReadFromJsonAsync<SuccessResponse<Dictionary<string, IEnumerable<OrganisationDto>>>>();
 
             // Assert
             Assert.IsTrue(response.IsSuccessStatusCode);
@@ -91,12 +96,4 @@ namespace Auth.Spec
 
 
     }
-
-    //public class SuccessResponse { 
-
-
-    //    string message;
-    //    UserDataDto user;
-    //    string status = "success";
-    //        }
 }
